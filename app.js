@@ -3,7 +3,8 @@ var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
-const AWS = require("aws-sdk");
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBDocumentClient } = require("@aws-sdk/lib-dynamodb");
 const dotenv = require("dotenv");
 
 dotenv.config();
@@ -13,15 +14,22 @@ var usersRouter = require("./routes/users");
 var participantRouter = require("./routes/participant");
 var app = express();
 
-// Configure AWS
-AWS.config.update({
+// New DynamoDB v3 client initialization
+const dbClient = new DynamoDBClient({
   region: process.env.AWS_REGION,
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
 });
 
-// Create DynamoDB service object
-const dynamoDB = new AWS.DynamoDB.DocumentClient();
+const dynamoDB = DynamoDBDocumentClient.from(dbClient);
+
+// Make dynamoDB available in the request object
+app.use((req, res, next) => {
+  req.dynamoDB = dynamoDB;
+  next();
+});
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));

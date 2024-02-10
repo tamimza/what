@@ -1,6 +1,5 @@
 var express = require("express");
 var router = express.Router();
-const AWS = require("aws-sdk");
 const adminAuth = require("../middleware/authMiddleware");
 
 router.post("/participants/add", adminAuth, async (req, res) => {
